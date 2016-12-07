@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shitbucket challenge</title>
+  <style>
+
+    html, body{
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      font-family: "Helvetica Neue", Helvetica, sans-serif, Arial;
+      background: #A87B4F;
+    }
+
+    body{
+      padding: 13px;
+      color: #603813;
+    }
+
+    *, *:before, *:after{
+      box-sizing: border-box;
+      outline: none !important;
+      user-select: none;
+    }
+
+    #SBC_Logo{
+      width: 296px;
+      height: 160px;
+      margin-bottom: 20px;
+    }
+
+    form{
+      position: relative;
+      width: 296px;
+      margin-bottom: 20px;
+      display: flex;
+      flex-flow: row;
+      flex-wrap: nowrap;
+      justify-content: center;
+      z-index: 1;
+    }
+
+    form input[type="tel"]{
+      display: block;
+      font-size: 16px;
+      width: 204px;
+      padding: 9px 15px 7px;
+      border-radius: 5px 0 0 5px;
+      border: 2px solid #603813;
+    }
+
+    .sbc_flexitem{
+      height: 38px;
+      min-width: 92px;
+    }
+
+    form button[type="submit"]{
+      position: relative;
+      border: 0;
+      height: 100%;
+      padding: 10px 15px 6px 25px;
+      font-size: 16px;
+      border-radius: 0 5px 5px 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      color: #DAB087;
+      overflow: visible;
+      background: #603813;
+      box-shadow: inset 6px 0 0 #714F3B, 2px 6px 10px rgba(0,0,0,.4), 1px 1px 3px rgba(0,0,0,.3);
+      transition: all .15s;
+    }
+    form button[type="submit"]:after{
+      content: ':)';
+      position: absolute;
+      display: block;
+      right: -1px;
+      top: 0;
+      padding-top: 10px;
+      font-weight: bold;
+      color: #75d465;
+      z-index: -1;
+      transition: all .15s;
+    }
+    form input[type="tel"]:invalid ~ .sbc_flexitem button[type="submit"]:after{
+      content: ':(';
+      color: #990000;
+    }
+
+    form button[type="submit"]:hover,
+    form button[type="submit"]:focus{
+      color: #FFFFFF;
+      background: #603813;
+    }
+    form button[type="submit"]:active{
+      padding: 10px 15px 6px 15px;
+      box-shadow: inset 1px 0 0 #714F3B, 0px 2px 2px rgba(0,0,0,.1), 0px 1px 3px rgba(0,0,0,.1);
+    }
+    form button[type="submit"]:active:after{
+      right: -16px;
+    }
+
+
+
+    .sbc_statistic{
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      font-weight: normal;
+      font-size: 14px;
+      color: #6f4f25;
+    }
+
+    .sbc_output{
+      width: 100%;
+      min-height: 100px;
+      border: 1px solid #222;
+      margin-top: 20px;
+    }
+    .sbc_output:empty{
+      display: none;
+    }
+
+    .sbc_error{
+      position: relative;
+      display: block;
+      padding: 25px 10px 20px;
+      border-radius: 5px;
+      font-size: 15px;
+      color: #FFE6E6;
+      text-shadow: 1px 1px 1px rgba(40, 0, 0, .8);
+      background: #D20000;
+      box-shadow: 0 10px 15px rgba(0,0,0,.3);
+      z-index: 101;
+    }
+    .sbc_error:before{
+      content: 'Щось наєбнулось:';
+      position: absolute;
+      top: -5px;
+      left: 10px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      padding: 0 5px 2px;
+      font-size: 12px;
+      color: #222;
+      text-shadow: none;
+      background: #A87B4F;
+    }
+    .sbc_error:empty{
+      display: none;
+    }
+
+    .sbc_preloader{
+      position: fixed;
+      display: flex;
+      flex-wrap: nowrap;
+      flex-flow: column;
+      align-items: center;
+      justify-content: center;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(168, 123, 79, .95);
+      z-index: 100;
+      cursor: default;
+    }
+    .sbc_preloader-state{
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 20px;
+      text-align: center;
+      color: #fff;
+    }
+
+    /* cc http://tobiasahlin.com/spinkit/ */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      position: relative;
+      text-align: center;
+    }
+
+    .dot1, .dot2 {
+      width: 60%;
+      height: 60%;
+      opacity: 0;
+      display: inline-block;
+      position: absolute;
+      top: 0;
+      background-color: #fff;
+      border-radius: 100%;
+      transition: transform .3s;
+    }
+
+    .dot2 {
+      top: auto;
+      bottom: 0;
+      animation-delay: -1.0s;
+    }
+
+    .spinner.can-animate{
+      animation: sk-rotate 2.0s infinite linear;
+    }
+    .spinner.can-animate .dot1,
+    .spinner.can-animate .dot2 {
+      opacity: 1;
+      /*transform: scale(.5);*/
+      animation: sk-bounce 2.0s infinite ease-in-out;
+    }
+    .spinner.can-animate .dot2 {
+      transform: scale(0.0);
+      animation-delay: -1.0s;
+    }
+
+    @keyframes sk-rotate {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    @keyframes sk-bounce {
+      0%, 100% {
+        transform: scale(0.0);
+      } 50% {
+        transform: scale(1.0);
+      }
+    }
+
+    .is-hidden{
+      display: none !important;
+    }
+  </style>
+</head>
+<body class="sbc_147">
+
+  <div class="js-error sbc_error"></div>
+
+  <div class="js-preloader sbc_preloader">
+    <div class="spinner js-preloader-spinner">
+      <div class="dot1"></div>
+      <div class="dot2"></div>
+    </div>
+    <div class="js-preloader-state sbc_preloader-state"></div>
+  </div>
+
+  <img id="SBC_Logo" src="SBClogo.svg?1" alt="">
+
+  <form action="">
+    <input type="tel" autocomplete="off" name="victim" maxlength="13" placeholder="+380443934006" pattern="(\+?\d[- .]*){7,13}" title="Дідько! Телефон має починатись з плюс тридцять вісім, нуль, і далі номер..." required>
+    <div class="sbc_flexitem"><button type="submit">Нумо</button></div>
+  </form>
+
+  <ul class="sbc_statistic">
+    <li>Насиченність БД: 146</li>
+    <li>Версія <strong>Ї 0.1</strong></li>
+  </ul>
+
+  <div class="js-output sbc_output"></div>
+
+  <script src="main.js"></script>
+  <!-- <script src="//cdn.jsdelivr.net/livejs/4/live.js"></script> -->
+</body>
+</html>

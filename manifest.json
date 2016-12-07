@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+
+  "name": "Shit Bucket Challenge",
+  "description": "This extension shows a Google Image search result for the current page",
+  "version": "1.0",
+  "author": "@tooth_gandalf",
+  "browser_action": {
+    "default_icon": "SBClogo_s.png",
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "activeTab",
+    "browsingData",
+    "https://ajax.googleapis.com/"
+  ]
+}

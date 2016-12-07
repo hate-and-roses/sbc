@@ -1,0 +1,18 @@
+{
+  "targets": [
+    {
+      "megashara.ua":{
+        "url": "http://megashara.ua",
+        "method": "POST",
+        "ajaxURL": "http://megashara.ua",
+        "formData": {
+          "fullname": "",
+          "phone": ""
+        },
+        "hasCaptcha": true,
+        "pureHTML": true
+      }
+    }
+  ],
+  "response":"ok"
+}
