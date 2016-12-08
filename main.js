@@ -28,14 +28,47 @@ f=new sa(C,u,C[u],D,f),u in A&&(f.e=A[u]),f.xs0=0,f.plugin=h,d._overwriteProps.p
 var SBC = {};
 
 
+SBC.initFormEvents = function(){
+
+
+};
+
+
+SBC.revealForm = function(){
+  var context = this;
+
+  context.DO.$phoneForm.removeClass(context.classes.vhidden);
+
+  var $phoneInp = context.DO.$phoneForm.find('input[type="tel"]'),
+      $phoneSbm = context.DO.$phoneForm.find('button[type="submit"]');
+
+  TweenMax.staggerFrom([$phoneInp, $phoneSbm], 1, {x: '150%', ease: Elastic.easeOut}, .2);
+  TweenMax.fromTo( context.$root, 1, {delay:.2, rotationY: 70, x: -30, skewX: 2}, {rotationY: 0, x: 0, skewX: 1, ease: Elastic.easeOut});
+
+};
+
+
+SBC.hideForm = function(){
+  var context = this;
+
+  var $phoneInp = context.DO.$phoneForm.find('input[type="tel"]'),
+      $phoneSbm = context.DO.$phoneForm.find('button[type="submit"]');
+
+  TweenMax.staggerTo([$phoneInp, $phoneSbm], 1, {x: '0%', ease: Elastic.easeOut}, .2, function(){
+    // context.DO.$phoneForm.addClass(context.classes.vhidden);
+    console.log('complete');
+  });
+};
+
+
 SBC.hidePreloader = function(){
   var context = this;
 
-  context.DO.$preloaderSpinner.removeClass('can-animate');
+  context.DO.$preloaderSpinner.removeClass(context.classes.canAnimate);
 
   TweenMax.to(context.DO.$preloader, .5, { alpha: 0,
     onComplete: function(){
-      context.DO.$preloader.addClass('is-hidden');
+      context.DO.$preloader.addClass(context.classes.hidden);
       context.DO.$preloaderState.text('');
   }});
   TweenMax.to(context.DO.$preloaderState, .5, {
@@ -50,8 +83,8 @@ SBC.hidePreloader = function(){
 SBC.showPreloader = function( customText ){
   var context = this;
 
-  context.DO.$preloader.removeClass('can-animate');
-  context.DO.$preloader.removeClass('is-hidden');
+  context.DO.$preloader.removeClass(context.classes.canAnimate);
+  context.DO.$preloader.removeClass(context.classes.hidden);
 
   context.DO.$preloaderState.text( customText || 'Щось відбувається' );
   TweenMax.fromTo(context.DO.$preloader, .5, {
@@ -63,7 +96,7 @@ SBC.showPreloader = function( customText ){
       scale: 0
     },{
       scale: 1, clearProps:"all", onComplete: function(){
-        context.DO.$preloaderSpinner.addClass('can-animate');
+        context.DO.$preloaderSpinner.addClass(context.classes.canAnimate);
       }
     }
   );
@@ -78,18 +111,40 @@ SBC.init = function(){
   // Database placeholder
   context.db = {};
 
+  // All DOM classes in one place
+  context.classes = {
+    _root: '.sbc_147',
+    preloader: '.js-preloader',
+    preloaderSpinner: '.js-preloader-spinner',
+    preloaderState: '.js-preloader-state',
+    errorPlaceHolder: '.js-error',
+    hidden: 'is-hidden',
+    vhidden: 'is-v-hidden',
+    canAnimate: 'can-animate',
+    phoneForm: '.js-sbc-from'
+  };
+
   // Body ref
-  context.$root = $('.sbc_147');
+  context.$root = $(context.classes._root);
 
   // Main Display Objects
   context.DO = {
     // Placeholder for error ouput
-    $error: context.$root.find('.js-error'),
+    $error: context.$root.find(context.classes.errorPlaceHolder),
     // Preloader
-    $preloader: context.$root.find('.js-preloader'),
-    $preloaderSpinner: context.$root.find('.js-preloader-spinner'),
-    $preloaderState: context.$root.find('.js-preloader-state')
+    $preloader: context.$root.find(context.classes.preloader),
+    $preloaderSpinner: context.$root.find(context.classes.preloaderSpinner),
+    $preloaderState: context.$root.find(context.classes.preloaderState),
+    // Form
+    $phoneForm: context.$root.find(context.classes.phoneForm)
 
+  };
+
+  // Ajax settings
+  context.ajax = {
+    method: "POST",
+    url: "db.json",
+    dataType: "JSON"
   };
 
   // Extension version and other data
@@ -98,11 +153,17 @@ SBC.init = function(){
   // Update preloader state
   context.showPreloader('Тягну інфу');
 
+  // Hide form (we need to set initial TweenMax values here)
+  context.hideForm();
+
+  // Set form events
+  context.initFormEvents();
+
   // Get main data and report current app version
   $.ajax({
-    method: "POST",
-    url: "db.json",
-    dataType: "JSON",
+    method: context.ajax.method,
+    url: context.ajax.url,
+    dataType: context.ajax.dataType,
     data: { app: context.appState.version || "none" }
   }).done(function( r ) {
     if (r.response === "ok"){
@@ -110,6 +171,7 @@ SBC.init = function(){
 
       setTimeout(function(){
         context.hidePreloader();
+        context.revealForm();
       },1000);
     }
   }).fail(function( r ) {
@@ -123,6 +185,8 @@ SBC.init = function(){
 
 };
 
-// if(chrome.app.getDetails() !== null){
+if(chrome.app.getDetails() !== null){
   SBC.init();
-// }
+}else{
+  SBC.DO.$error.text('Воно так не працює');
+}

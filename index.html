@@ -16,6 +16,8 @@
     body{
       padding: 13px;
       color: #603813;
+      position: relative;
+      perspective: 200px;
     }
 
     *, *:before, *:after{
@@ -42,6 +44,7 @@
     }
 
     form input[type="tel"]{
+      position: relative;
       display: block;
       font-size: 16px;
       width: 204px;
@@ -69,25 +72,8 @@
       overflow: visible;
       background: #603813;
       box-shadow: inset 6px 0 0 #714F3B, 2px 6px 10px rgba(0,0,0,.4), 1px 1px 3px rgba(0,0,0,.3);
-      transition: all .15s;
+      transition: padding .15s, color .15s, background .15s, box-shadow .15s;
     }
-    form button[type="submit"]:after{
-      content: ':)';
-      position: absolute;
-      display: block;
-      right: -1px;
-      top: 0;
-      padding-top: 10px;
-      font-weight: bold;
-      color: #75d465;
-      z-index: -1;
-      transition: all .15s;
-    }
-    form input[type="tel"]:invalid ~ .sbc_flexitem button[type="submit"]:after{
-      content: ':(';
-      color: #990000;
-    }
-
     form button[type="submit"]:hover,
     form button[type="submit"]:focus{
       color: #FFFFFF;
@@ -96,9 +82,6 @@
     form button[type="submit"]:active{
       padding: 10px 15px 6px 15px;
       box-shadow: inset 1px 0 0 #714F3B, 0px 2px 2px rgba(0,0,0,.1), 0px 1px 3px rgba(0,0,0,.1);
-    }
-    form button[type="submit"]:active:after{
-      right: -16px;
     }
 
 
@@ -231,6 +214,12 @@
     .is-hidden{
       display: none !important;
     }
+
+    .is-v-hidden{
+      visibility: hidden;
+      pointer-events: none;
+    }
+
   </style>
 </head>
 <body class="sbc_147">
@@ -247,7 +236,7 @@
 
   <img id="SBC_Logo" src="SBClogo.svg?1" alt="">
 
-  <form action="">
+  <form action="" class="js-sbc-from is-v-hidden">
     <input type="tel" autocomplete="off" name="victim" maxlength="13" placeholder="+380443934006" pattern="(\+?\d[- .]*){7,13}" title="Дідько! Телефон має починатись з плюс тридцять вісім, нуль, і далі номер..." required>
     <div class="sbc_flexitem"><button type="submit">Нумо</button></div>
   </form>
@@ -260,6 +249,5 @@
   <div class="js-output sbc_output"></div>
 
   <script src="main.js"></script>
-  <!-- <script src="//cdn.jsdelivr.net/livejs/4/live.js"></script> -->
 </body>
 </html>
