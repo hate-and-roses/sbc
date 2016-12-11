@@ -28,22 +28,249 @@ f=new sa(C,u,C[u],D,f),u in A&&(f.e=A[u]),f.xs0=0,f.plugin=h,d._overwriteProps.p
 var SBC = {};
 
 
+
+SBC.init = function(){
+
+  var context = this;
+
+  // Database placeholder
+  context.db = {};
+
+  // All DOM classes in one place
+  context.classes = {
+    _root: '.sbc_147',
+    preloader: '.js-preloader',
+    preloaderSpinner: '.js-preloader-spinner',
+    preloaderState: '.js-preloader-state',
+    errorPlaceHolder: '.js-error',
+    hidden: 'is-hidden',
+    vhidden: 'is-v-hidden',
+    canAnimate: 'can-animate',
+    phoneForm: '.js-sbc-from'
+  };
+
+  context.errors = {
+    phone: 'Дідько! Телефон має бути в форматі +380999999999',
+    db:{
+      url: 'Базєйки десь тупо нема',
+    }
+  };
+
+  // Body ref
+  context.$root = $(context.classes._root);
+
+  // Main Display Objects
+  context.DO = {
+    // Placeholder for error ouput
+    $error: context.$root.find(context.classes.errorPlaceHolder),
+    // Preloader
+    $preloader: context.$root.find(context.classes.preloader),
+    $preloaderSpinner: context.$root.find(context.classes.preloaderSpinner),
+    $preloaderState: context.$root.find(context.classes.preloaderState),
+    // Form
+    $phoneForm: context.$root.find(context.classes.phoneForm),
+          $phoneInp: context.$root.find(context.classes.phoneForm).find('input[type="tel"]'),
+          $phoneSbm: context.$root.find(context.classes.phoneForm).find('button[type="submit"]'),
+  };
+
+  // Ajax settings
+  context.ajax = {
+    method: "POST",
+    url: "db.json",
+    dataType: "JSON"
+  };
+
+  // Extension version and other data
+  context.appState = chrome.app.getDetails() || "none";
+
+  // Update preloader state
+  context.showPreloader('Тягну інфу');
+
+  // Set form events
+  context.initFormEvents();
+
+  // Get main data and report current app version
+  $.ajax({
+    method: context.ajax.method,
+    url: context.ajax.url,
+    dataType: context.ajax.dataType,
+    data: { app: context.appState.version || "none" }
+  }).done(function( r ) {
+    if (r.response === "ok"){
+      context.db = r.targets;
+
+      setTimeout(function(){
+        context.hidePreloader();
+        context.revealForm();
+      },1000);
+    }
+  }).fail(function( r ) {
+    context.showError(context.errors.db.url);
+  });
+
+  // chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
+  //     var url = tabs[0].url;
+  //     $('.js-output').text(url);
+  // });
+
+};
+
+
+
+SBC.showError = function(txt){
+  var context = this;
+  context.DO.$error.text(txt);
+  TweenMax.fromTo(context.DO.$error, .2,
+    {
+      transformOrigin: "50% 0",
+      y: '-=100%'
+    },{
+      y: '0%',
+      clearProps: "all",
+      ease: Power4.easeOut
+    });
+};
+
+
+SBC.hideError = function(){
+  var context = this;
+
+  if (context.DO.$error.text().length > 0){
+    TweenMax.fromTo(context.DO.$error, .2, {
+        transformOrigin: "0 0",
+        y: '0',
+        x: 0,
+        rotation: 0,
+      },{
+        y: '-=80%',
+        x: -100,
+        rotation: -50,
+        ease: Power4.easeOut,
+        clearProps: "all",
+        onComplete: function(){
+          context.DO.$error.text('');
+        }
+      });
+  }
+
+};
+
+
 SBC.initFormEvents = function(){
+  var context = this;
+
+  var inputRestrictions = function(e){
+
+    var isShortcut = false;
+
+    switch (e.type){
+
+      case "paste":
+        // FUCK YEAH! This is Javascript...
+        setTimeout(function() {
+          // e.target.value = (isNaN(e.target.value)) ? '' : e.target.value;
+          formatPhone(e, null, isShortcut);
+        }, 0);
+      break;
 
 
+      case "keydown":
+
+        if( ( e.ctrlKey && ~[45,65,88,67,86].indexOf(e.keyCode) ) ||
+            ( e.shiftKey && e.keyCode === 45 ) ||
+            ( e.shiftKey && e.keyCode === 187 ) ||
+              e.keyCode === 107 ){
+              isShortcut = true;
+               /* Allow:
+                  Ctrl + Ins, A, X, C, V
+                  Shift + Ins (Oldfags special)
+                  Shift + "+"
+                  Shift + "+"(NumLock) */
+        }else{
+          if( ( !isNaN(+e.key) || ~[8,9,27,37,38,39,40,13].indexOf(e.keyCode) ) && e.keyCode !== 32){
+            /* Allow when:
+              ( Not a letter || is Backspace, Tab, Esc, Arrow keys, Enter ) && not a Space*/
+              setTimeout(function() {
+                formatPhone(e, e.key, isShortcut);
+              }, 0);
+          }else{
+            return false;
+          }
+        }
+      break;
+    }
+
+    context.hideError();
+  };
+
+  var formatPhone = function(e, lastchar, isShortcut){
+
+    switch(e.type){
+      case "paste":
+        if(e.target.value){
+          var cleanVal = '';
+          $.each(e.target.value.split(''), function(i,el){
+            if( !isNaN(+el) && el !== ' ') {
+              cleanVal += el;
+            }
+          });
+          // check country code prefix
+          if ( cleanVal.indexOf("+380") !== 0 ){
+            if ( cleanVal.indexOf("380") !== 0 ){
+              if ( cleanVal.indexOf("0") === 0 ){
+                cleanVal = "+38" + cleanVal;
+              }else{
+                cleanVal = "+380" + cleanVal;
+              }
+            }else{
+              cleanVal = "+" + cleanVal;
+            }
+
+          }
+          // Remove leading zero when pasting 0XX XXX XX XX and cut to 13 chars
+          e.target.value = (cleanVal.charAt(4) === '0') ? (cleanVal.substr(0,4) + cleanVal.slice(5,14)) : cleanVal.slice(0,14);
+
+        }
+      break;
+      case "keydown":
+        if(typeof lastchar !== "undefined" && !isShortcut){
+          if ( e.target.value.indexOf("+380") !== 0 ){
+            e.target.value = "+380";
+          }else{
+            e.target.value = e.target.value.slice(0,13);
+          }
+        }
+      break;
+    }
+
+  };
+
+  context.DO.$phoneInp.on('keydown paste', inputRestrictions);
+  context.DO.$phoneForm.on('submit', function(e){
+    console.log();
+    if(context.DO.$phoneInp.val().length !== 13){
+      e.preventDefault();
+      context.showError(context.errors.phone);
+      return false;
+    }else{
+      e.preventDefault();
+      context.hideForm();
+    }
+  })
 };
 
 
 SBC.revealForm = function(){
   var context = this;
 
-  context.DO.$phoneForm.removeClass(context.classes.vhidden);
+  context.DO.$phoneForm.removeClass( context.classes.vhidden );
 
-  var $phoneInp = context.DO.$phoneForm.find('input[type="tel"]'),
-      $phoneSbm = context.DO.$phoneForm.find('button[type="submit"]');
+  TweenMax.staggerFrom( [context.DO.$phoneInp, context.DO.$phoneSbm], 1,
+    {x: '150%', ease: Elastic.easeOut }, .2);
 
-  TweenMax.staggerFrom([$phoneInp, $phoneSbm], 1, {x: '150%', ease: Elastic.easeOut}, .2);
-  TweenMax.fromTo( context.$root, 1, {delay:.2, rotationY: 70, x: -30, skewX: 2}, {rotationY: 0, x: 0, skewX: 1, ease: Elastic.easeOut});
+  TweenMax.fromTo( context.$root, 1,
+    { delay:.2, rotationY: 70, x: -30 },
+    { rotationY: 0, x: 0, ease: Elastic.easeOut, clearProps: "all" });
 
 };
 
@@ -51,13 +278,16 @@ SBC.revealForm = function(){
 SBC.hideForm = function(){
   var context = this;
 
-  var $phoneInp = context.DO.$phoneForm.find('input[type="tel"]'),
-      $phoneSbm = context.DO.$phoneForm.find('button[type="submit"]');
+  TweenMax.fromTo( context.$root, 1,
+    { delay:.1, rotationY: 40, x: -30 },
+    { rotationY: 0, x: 0, ease: Elastic.easeOut, clearProps: "all" });
 
-  TweenMax.staggerTo([$phoneInp, $phoneSbm], 1, {x: '0%', ease: Elastic.easeOut}, .2, function(){
-    // context.DO.$phoneForm.addClass(context.classes.vhidden);
-    console.log('complete');
-  });
+  TweenMax.to( context.DO.$phoneForm, .3,
+    {x: '-=150%', rotationY: -60, ease: Power3.easeOut, clearProps: "all",
+      onComplete: function(){
+        context.DO.$phoneForm.addClass( context.classes.vhidden );
+      }
+    });
 };
 
 
@@ -103,87 +333,6 @@ SBC.showPreloader = function( customText ){
 
 };
 
-
-SBC.init = function(){
-
-  var context = this;
-
-  // Database placeholder
-  context.db = {};
-
-  // All DOM classes in one place
-  context.classes = {
-    _root: '.sbc_147',
-    preloader: '.js-preloader',
-    preloaderSpinner: '.js-preloader-spinner',
-    preloaderState: '.js-preloader-state',
-    errorPlaceHolder: '.js-error',
-    hidden: 'is-hidden',
-    vhidden: 'is-v-hidden',
-    canAnimate: 'can-animate',
-    phoneForm: '.js-sbc-from'
-  };
-
-  // Body ref
-  context.$root = $(context.classes._root);
-
-  // Main Display Objects
-  context.DO = {
-    // Placeholder for error ouput
-    $error: context.$root.find(context.classes.errorPlaceHolder),
-    // Preloader
-    $preloader: context.$root.find(context.classes.preloader),
-    $preloaderSpinner: context.$root.find(context.classes.preloaderSpinner),
-    $preloaderState: context.$root.find(context.classes.preloaderState),
-    // Form
-    $phoneForm: context.$root.find(context.classes.phoneForm)
-
-  };
-
-  // Ajax settings
-  context.ajax = {
-    method: "POST",
-    url: "db.json",
-    dataType: "JSON"
-  };
-
-  // Extension version and other data
-  context.appState = chrome.app.getDetails() || "none";
-
-  // Update preloader state
-  context.showPreloader('Тягну інфу');
-
-  // Hide form (we need to set initial TweenMax values here)
-  context.hideForm();
-
-  // Set form events
-  context.initFormEvents();
-
-  // Get main data and report current app version
-  $.ajax({
-    method: context.ajax.method,
-    url: context.ajax.url,
-    dataType: context.ajax.dataType,
-    data: { app: context.appState.version || "none" }
-  }).done(function( r ) {
-    if (r.response === "ok"){
-      context.db = r.targets;
-
-      setTimeout(function(){
-        context.hidePreloader();
-        context.revealForm();
-      },1000);
-    }
-  }).fail(function( r ) {
-    context.DO.$error.text('Базєйки десь тупо нема');
-  });
-
-  // chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
-  //     var url = tabs[0].url;
-  //     $('.js-output').text(url);
-  // });
-
-};
 
 if(chrome.app.getDetails() !== null){
   SBC.init();

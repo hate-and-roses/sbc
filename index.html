@@ -18,12 +18,17 @@
       color: #603813;
       position: relative;
       perspective: 200px;
+      overflow: hidden;
     }
 
     *, *:before, *:after{
       box-sizing: border-box;
       outline: none !important;
       user-select: none;
+    }
+
+    .sbc_147{
+      position: relative;
     }
 
     #SBC_Logo{
@@ -107,7 +112,9 @@
     }
 
     .sbc_error{
-      position: relative;
+      position: absolute;
+      top: 13px;
+      left: 13px; right: 13px;
       display: block;
       padding: 25px 10px 20px;
       border-radius: 5px;
@@ -236,8 +243,8 @@
 
   <img id="SBC_Logo" src="SBClogo.svg?1" alt="">
 
-  <form action="" class="js-sbc-from is-v-hidden">
-    <input type="tel" autocomplete="off" name="victim" maxlength="13" placeholder="+380443934006" pattern="(\+?\d[- .]*){7,13}" title="Дідько! Телефон має починатись з плюс тридцять вісім, нуль, і далі номер..." required>
+  <form action="" method="POST" class="js-sbc-from is-v-hidden" novalidate>
+    <input type="tel" autocomplete="off" name="victim" placeholder="+380443934006" value="+380" required>
     <div class="sbc_flexitem"><button type="submit">Нумо</button></div>
   </form>
 
