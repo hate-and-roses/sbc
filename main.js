@@ -89,6 +89,9 @@ SBC.init = function(){
   // Set form events
   context.initFormEvents();
 
+  // Set app events
+  context.initAutomatorEvents();
+
   // Get main data and report current app version
   $.ajax({
     method: context.ajax.method,
@@ -102,19 +105,32 @@ SBC.init = function(){
       setTimeout(function(){
         context.hidePreloader();
         context.revealForm();
+
+        // chrome.tabs.update({url: context.db[0].url});
+
       },1000);
     }
   }).fail(function( r ) {
     context.showError(context.errors.db.url);
   });
 
-  // chrome.tabs.query({'active': true, 'lastFocusedWindow': true}, function (tabs) {
-  //     var url = tabs[0].url;
-  //     $('.js-output').text(url);
-  // });
 
 };
 
+
+
+SBC.initAutomatorEvents = function(){
+
+  chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+      console.log("UPDATED");
+  });
+
+  chrome.tabs.onCreated.addListener(function(tab) {
+      console.log("CREATED");
+     // insertDictionaryScript();
+  });
+
+};
 
 
 SBC.showError = function(txt){
@@ -339,3 +355,4 @@ if(chrome.app.getDetails() !== null){
 }else{
   SBC.DO.$error.text('Воно так не працює');
 }
+
